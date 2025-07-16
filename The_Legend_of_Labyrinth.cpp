@@ -1,11 +1,13 @@
-#include <iostream>
-#include <cstdlib>
-#include <ctime>
-#include <vector>
-#include <thread>
-#include <chrono>
 #include <conio.h>
 #include <windows.h>
+
+#include <chrono>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <string>
+#include <thread>
+#include <vector>
 
 using namespace std;
 
@@ -13,7 +15,9 @@ const int MAP_SIZE = 50;
 const int VIEW_SIZE = 20;
 const int NUM_MAPS = 5;
 const int TOTAL_HIDDEN = 15;
-const int TIME_BONUS = 40; // Ahora 40 segundos por T
+const int TIME_BONUS = 40;  // Ahora 40 segundos por T
+
+string buffer;  // Buffer de memoria para escribir el mapa sin mostrarlo
 
 struct Position {
     int x, y;
@@ -41,7 +45,7 @@ void clearScreen() {
 // Función para configurar el cursor en la consola
 void setCursorPosition(int x, int y) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    COORD pos = { static_cast<SHORT>(y), static_cast<SHORT>(x) };
+    COORD pos = {static_cast<SHORT>(y), static_cast<SHORT>(x)};
     SetConsoleCursorPosition(hConsole, pos);
 }
 
@@ -57,18 +61,18 @@ void generateMaze(Map& map) {
     // Crear caminos usando DFS
     srand(time(nullptr));
     vector<Position> stack;
-    Position start = { 1, 1 };
+    Position start = {1, 1};
     map.grid[start.x][start.y] = ' ';
     stack.push_back(start);
 
-    int dx[] = { -2, 2, 0, 0 };
-    int dy[] = { 0, 0, -2, 2 };
+    int dx[] = {-2, 2, 0, 0};
+    int dy[] = {0, 0, -2, 2};
 
     while (!stack.empty()) {
         Position current = stack.back();
         stack.pop_back();
 
-        vector<int> directions = { 0, 1, 2, 3 };
+        vector<int> directions = {0, 1, 2, 3};
         for (int i = 0; i < 4; ++i) {
             int idx = rand() % directions.size();
             int dir = directions[idx];
@@ -81,7 +85,7 @@ void generateMaze(Map& map) {
                 map.grid[nx][ny] = ' ';
                 map.grid[current.x + dx[dir] / 2][current.y + dy[dir] / 2] = ' ';
                 stack.push_back(current);
-                stack.push_back({ nx, ny });
+                stack.push_back({nx, ny});
                 break;
             }
         }
@@ -91,11 +95,11 @@ void generateMaze(Map& map) {
 // Función para inicializar un mapa
 void initializeMap(Map& map, int mapIndex) {
     generateMaze(map);
-    map.player = { 1, 1 };
+    map.player = {1, 1};
 
     // Colocar llave
     do {
-        map.key.pos = { rand() % (MAP_SIZE - 2) + 1, rand() % (MAP_SIZE - 2) + 1 };
+        map.key.pos = {rand() % (MAP_SIZE - 2) + 1, rand() % (MAP_SIZE - 2) + 1};
     } while (map.grid[map.key.pos.x][map.key.pos.y] != ' ');
     map.key.collected = false;
     map.grid[map.key.pos.x][map.key.pos.y] = 'P';
@@ -104,7 +108,7 @@ void initializeMap(Map& map, int mapIndex) {
     for (int i = 0; i < 3; ++i) {
         GameObject item;
         do {
-            item.pos = { rand() % (MAP_SIZE - 2) + 1, rand() % (MAP_SIZE - 2) + 1 };
+            item.pos = {rand() % (MAP_SIZE - 2) + 1, rand() % (MAP_SIZE - 2) + 1};
         } while (map.grid[item.pos.x][item.pos.y] != ' ');
         map.hiddenItems.push_back(item);
     }
@@ -113,7 +117,7 @@ void initializeMap(Map& map, int mapIndex) {
     for (int i = 0; i < 1; ++i) {
         GameObject item;
         do {
-            item.pos = { rand() % (MAP_SIZE - 2) + 1, rand() % (MAP_SIZE - 2) + 1 };
+            item.pos = {rand() % (MAP_SIZE - 2) + 1, rand() % (MAP_SIZE - 2) + 1};
         } while (map.grid[item.pos.x][item.pos.y] != ' ');
         map.visibleItems.push_back(item);
         map.grid[item.pos.x][item.pos.y] = 'T';
@@ -127,7 +131,7 @@ void initializeMap(Map& map, int mapIndex) {
 
 // Función para mostrar el mapa en la vista
 void displayMap(Map& map, int timeLeft, int collectedHidden) {
-    clearScreen();
+    buffer.clear();
 
     // Calcular los límites de la vista
     int startX = max(0, map.player.x - VIEW_SIZE / 2);
@@ -139,9 +143,8 @@ void displayMap(Map& map, int timeLeft, int collectedHidden) {
     for (int i = startX; i < endX; ++i) {
         for (int j = startY; j < endY; ++j) {
             if (i == map.player.x && j == map.player.y) {
-                cout << '@';
-            }
-            else {
+                buffer += '@';
+            } else {
                 // Verificar si hay un objeto oculto no recogido en esta posición
                 bool hiddenItemHere = false;
                 for (auto& item : map.hiddenItems) {
@@ -152,21 +155,24 @@ void displayMap(Map& map, int timeLeft, int collectedHidden) {
                 }
 
                 if (hiddenItemHere) {
-                    cout << 'H';
-                }
-                else {
-                    cout << map.grid[i][j];
+                    buffer += 'H';
+                } else {
+                    buffer += map.grid[i][j];
                 }
             }
         }
-        cout << endl;
+        buffer += '\n';
     }
 
     // Mostrar información del juego
-    cout << "\nMapa: " << (map.unlocked ? "Desbloqueado" : "Bloqueado") << endl;
-    cout << "Tiempo: " << timeLeft << " segundos" << endl;
-    cout << "Objetos encontrados: " << collectedHidden << "/" << TOTAL_HIDDEN << endl;
-    cout << "Controles: WASD (movimiento), C (cambiar mapa), Q (salir)" << endl;
+    buffer += "\nMapa: " + string(map.unlocked ? "Desbloqueado" : "Bloqueado") + "\n";
+    buffer += "Tiempo: " + to_string(timeLeft) + " segundos\n";
+    buffer += "Objetos encontrados: " + to_string(collectedHidden) + "/" + to_string(TOTAL_HIDDEN) + "\n";
+    buffer += "Controles: WASD (movimiento), C (cambiar mapa), Q (salir)\n";
+
+    // Limpiar la pantalla y mostrar el buffer
+    clearScreen();
+    cout << buffer;
 }
 
 // Función principal del juego
@@ -174,7 +180,7 @@ void playGame() {
     vector<Map> maps(NUM_MAPS);
     int currentMap = 0;
     int collectedHidden = 0;
-    int timeLeft = 180; // 180 segundos iniciales
+    int timeLeft = 180;  // 180 segundos iniciales
 
     // Inicializar todos los mapas
     for (int i = 0; i < NUM_MAPS; ++i) {
@@ -222,10 +228,14 @@ void playGame() {
             int newY = maps[currentMap].player.y;
 
             // Movimiento
-            if (input == 'w') newX--;
-            else if (input == 's') newX++;
-            else if (input == 'a') newY--;
-            else if (input == 'd') newY++;
+            if (input == 'w')
+                newX--;
+            else if (input == 's')
+                newX++;
+            else if (input == 'a')
+                newY--;
+            else if (input == 'd')
+                newY++;
             // Cambiar de mapa
             else if (input == 'c') {
                 clearScreen();
@@ -245,15 +255,13 @@ void playGame() {
             // Salir del juego
             else if (input == 'q') {
                 return;
-            }
-            else {
+            } else {
                 continue;
             }
 
             // Comprobar validez del movimiento
             if (newX >= 0 && newX < MAP_SIZE && newY >= 0 && newY < MAP_SIZE &&
                 maps[currentMap].grid[newX][newY] != '#') {
-
                 // Actualizar posición del jugador
                 maps[currentMap].player.x = newX;
                 maps[currentMap].player.y = newY;
@@ -262,7 +270,6 @@ void playGame() {
                 if (!maps[currentMap].key.collected &&
                     maps[currentMap].player.x == maps[currentMap].key.pos.x &&
                     maps[currentMap].player.y == maps[currentMap].key.pos.y) {
-
                     maps[currentMap].key.collected = true;
                     maps[currentMap].grid[maps[currentMap].key.pos.x][maps[currentMap].key.pos.y] = ' ';
 
@@ -277,7 +284,6 @@ void playGame() {
                     if (!item.collected &&
                         maps[currentMap].player.x == item.pos.x &&
                         maps[currentMap].player.y == item.pos.y) {
-
                         item.collected = true;
                         collectedHidden++;
                     }
@@ -288,7 +294,6 @@ void playGame() {
                     if (!item.collected &&
                         maps[currentMap].player.x == item.pos.x &&
                         maps[currentMap].player.y == item.pos.y) {
-
                         item.collected = true;
                         maps[currentMap].grid[item.pos.x][item.pos.y] = ' ';
                         // Sumar tiempo extra (ya se suma en el cálculo de timeLeft)
@@ -318,8 +323,7 @@ int main() {
 
         if (choice == '1') {
             playGame();
-        }
-        else if (choice == '2') {
+        } else if (choice == '2') {
             break;
         }
     }
