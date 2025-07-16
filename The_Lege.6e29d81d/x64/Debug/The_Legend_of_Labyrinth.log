@@ -1,9 +1,0 @@
-﻿  The_Legend_of_Labyrinth.cpp
-C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\The_Legend_of_Labyrinth.cpp(58,15): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\The_Legend_of_Labyrinth.cpp(189,21): warning C4244: 'inicializando': conversión de '_Rep' a 'int'; posible pérdida de datos
-C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\The_Legend_of_Labyrinth.cpp(189,21): warning C4244:         with
-C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\The_Legend_of_Labyrinth.cpp(189,21): warning C4244:         [
-C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\The_Legend_of_Labyrinth.cpp(189,21): warning C4244:             _Rep=__int64
-C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\The_Legend_of_Labyrinth.cpp(189,21): warning C4244:         ]
-C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\The_Legend_of_Labyrinth.cpp(307,15): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-  The_Legend_of_Labyrinth.vcxproj -> C:\Users\Evert Sanchez\source\repos\The_Legend_of_Labyrinth\x64\Debug\The_Legend_of_Labyrinth.exe
